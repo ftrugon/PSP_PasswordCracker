@@ -1,12 +1,33 @@
-﻿
+﻿using System;
+using System.Security.Cryptography;
+using System.Text;
 
-//Pass the file path and file name to the StreamReader constructor
 String filePath = "C:\\Users\\fran\\RiderProjects\\HilosGenericos\\HilosGenericos\\10k-most-common.txt";
-//Read the first line of text
 
 string[] lines = File.ReadAllLines(filePath);
 Random rng = new Random();
 int randomNumber = rng.Next(0, lines.Length);
-Console.WriteLine(lines[randomNumber]);
+String tal = lines[randomNumber];
 
-Console.ReadLine();
+Console.WriteLine(HashString(tal));
+
+
+
+String HashString(String toHash)
+{
+    byte[] tmpSource = ASCIIEncoding.ASCII.GetBytes(toHash);
+    return ByteArrayToString(new MD5CryptoServiceProvider().ComputeHash(tmpSource));
+    
+}
+
+
+static string ByteArrayToString(byte[] arrInput)
+{
+    int i;
+    StringBuilder sOutput = new StringBuilder(arrInput.Length);
+    for (i=0;i < arrInput.Length; i++)
+    {
+        sOutput.Append(arrInput[i].ToString("X2"));
+    }
+    return sOutput.ToString();
+}
