@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 using System.Text;
+using PSP_PasswordCracker;
 
 
 class Program
@@ -8,56 +9,55 @@ class Program
     
     static void Main(string[] args)
     {
-        String filePath = "C:\\Users\\fran\\RiderProjects\\HilosGenericos\\HilosGenericos\\10k-most-common.txt";
+        String filePath = "C:\\Users\\fran\\RiderProjects\\PSP_PasswordCracker\\PSP_PasswordCracker\\2151220-passwords.txt";
 
-        string[] lines = File.ReadAllLines(filePath);
+        String[] lines = File.ReadAllLines(filePath);
         Random rng = new Random();
         int randomNumber = rng.Next(0, lines.Length);
-        
-        String tal = lines[randomNumber];
-        String hash = HashString(tal);
-        Console.WriteLine($"PALABRA A DESCIFRAR --> {tal}, HASH --> {hash}");
-        
-        
-        Thread hilo = new Thread(() => CheckPasswords(lines, hash));
-        hilo.Start();
-    }
 
-    static String HashString(String toHash)
-    {
-        byte[] tmpSource = ASCIIEncoding.ASCII.GetBytes(toHash);
-        return ByteArrayToString(new MD5CryptoServiceProvider().ComputeHash(tmpSource));
+        HilosController hc = new HilosController();
+        
+        String tal = lines[0];
+        String hash = PasswdEncoder.Instancia.HashString(tal);
+        Console.WriteLine($"hash to catch --> {hash}");
+        
+        
+        Console.WriteLine($"Cuantos hilos quieres: ");
+
+        int hilos;
+        while (!int.TryParse(Console.ReadLine(), out hilos) || hilos <= 0)
+        {
+            Console.WriteLine("Por favor, ingresa un número válido de hilos.");
+        }
+        
+        List<MiHilo> hilosLista = new List<MiHilo>();
+
+        String[][] listaDividida = SplitArray(lines, hilos);
+
+        for (int i = 0; i < hilos; i++)
+        {
+            MiHilo hilo = new MiHilo(listaDividida[i], hash, hc);
+            hilosLista.Add(hilo);
+            hilo.Start();
+        }
+
+        
+    }
     
+    public static string[][] SplitArray(string[] passwords, int numParts)  
+    {        
+        int nSize = (int)Math.Ceiling((double)passwords.Length / numParts);
+        string[][] result = new string[numParts][];
+    
+        for (int i = 0; i < numParts; i++)  
+        {  
+            int start = i * nSize;  
+            int length = Math.Min(nSize, passwords.Length - start);  
+            result[i] = passwords.Skip(start).Take(length).ToArray();  
+        }  
+
+        return result;  
     }
 
-
-    static string ByteArrayToString(byte[] arrInput)
-    {
-        int i;
-        StringBuilder sOutput = new StringBuilder(arrInput.Length);
-        for (i=0;i < arrInput.Length; i++)
-        {
-            sOutput.Append(arrInput[i].ToString("X2"));
-        }
-        return sOutput.ToString();
-    }
-
-    static void CheckPasswords(String[] passwords,String correctHash)
-    {
-        foreach (var pass in passwords)
-        {
-            if (HashString(pass) == correctHash)
-            {
-                Console.WriteLine("Passwords Match");
-                Console.WriteLine("---------------");
-                Console.WriteLine($"{pass} --> {HashString(pass)}");
-                break;
-            }
-            else
-            {
-                Console.WriteLine("Passwords Not Match");
-            }
-        }
-    }
     
 }
